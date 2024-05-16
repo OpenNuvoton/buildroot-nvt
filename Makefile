@@ -16,6 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
+# Integrated in Buildroot-2024.02 by Nuvoton MPU, Author schung@nuvoton.com
 
 #--------------------------------------------------------------
 # Just run 'make menuconfig', configure stuff, then run 'make'.
@@ -114,7 +115,7 @@ DATE := $(shell date +%Y%m%d)
 # Compute the full local version string so packages can use it as-is
 # Need to export it, so it can be got from environment in children (eg. mconf)
 
-BR2_LOCALVERSION := $(shell $(TOPDIR)/support/scripts/setlocalversion)
+#BR2_LOCALVERSION := $(shell $(TOPDIR)/support/scripts/setlocalversion)
 ifeq ($(BR2_LOCALVERSION),)
 export BR2_VERSION_FULL := $(BR2_VERSION)
 else
@@ -231,6 +232,7 @@ LEGAL_WARNINGS = $(LEGAL_INFO_DIR)/.warnings
 LEGAL_REPORT = $(LEGAL_INFO_DIR)/README
 
 BR2_CONFIG = $(CONFIG_DIR)/.config
+BR2_UBOOT_CONFIG = $(CONFIG_DIR)/output/build/uboot-custom/.config
 
 # Pull in the user's configuration file
 ifeq ($(filter $(noconfig_targets),$(MAKECMDGOALS)),)
@@ -502,6 +504,7 @@ endif
 # Scripts in support/ or post-build scripts may need to reference
 # these locations, so export them so it is easier to use
 export BR2_CONFIG
+export BR2_UBOOT_CONFIG
 export BR2_REPRODUCIBLE
 export TARGET_DIR
 export STAGING_DIR

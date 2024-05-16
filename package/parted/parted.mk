@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-PARTED_VERSION = 3.6
+PARTED_VERSION = 3.3
 PARTED_SOURCE = parted-$(PARTED_VERSION).tar.xz
 PARTED_SITE = $(BR2_GNU_MIRROR)/parted
 PARTED_DEPENDENCIES = host-pkgconf util-linux
@@ -32,9 +32,32 @@ PARTED_DEPENDENCIES += libiconv
 endif
 
 HOST_PARTED_DEPENDENCIES = host-pkgconf host-util-linux
-HOST_PARTED_CONF_OPTS += \
-	--without-readline \
-	--disable-device-mapper
+HOST_PARTED_CONF_OPTS = \
+	--disable-silent-rules \
+	--disable-dependency-tracking \
+	--disable-device-mapper \
+	--disable-nls \
+	--without-readline
+
+define HOST_PARTED_CONFIGURE_CMDS
+	(cd $(@D); rm -rf config.cache; \
+		$(HOST_CONFIGURE_ARGS) \
+		$(HOST_CONFIGURE_OPTS) \
+		./configure \
+		--prefix="$(HOST_DIR)" \
+		$(HOST_PARTED_CONF_OPTS) \
+	)
+endef
+
+
+define HOST_PARTED_BUILD_CMDS
+	$(HOST_MAKE_ENV) $(MAKE1) -C $(@D)
+endef
+
+define HOST_PARTED_INSTALL_CMDS
+	$(HOST_MAKE_ENV) $(MAKE1) -C $(@D) install
+endef
+
 
 $(eval $(autotools-package))
-$(eval $(host-autotools-package))
+$(eval $(host-generic-package))

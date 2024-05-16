@@ -8,6 +8,7 @@ config BR2_TARGET_XILINX_FIRMWARE_ARCH_SUPPORTS
 
 menu "Bootloaders"
 
+source "boot/ma35d1-secureboot/Config.in"
 source "boot/afboot-stm32/Config.in"
 source "boot/at91bootstrap3/Config.in"
 source "boot/arm-trusted-firmware/Config.in"
