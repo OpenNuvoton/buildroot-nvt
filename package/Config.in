@@ -2402,6 +2402,7 @@ endmenu
 menu "Networking applications"
 	source "package/aardvark-dns/Config.in"
 	source "package/aircrack-ng/Config.in"
+	source "package/airplay/Config.in"
 	source "package/alfred/Config.in"
 	source "package/aoetools/Config.in"
 	source "package/apache/Config.in"
