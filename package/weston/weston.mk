@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-WESTON_VERSION = 15.0.1
+WESTON_VERSION = 10.0.5
 WESTON_SITE = https://gitlab.freedesktop.org/wayland/weston/-/releases/$(WESTON_VERSION)/downloads
 WESTON_SOURCE = weston-$(WESTON_VERSION).tar.xz
 WESTON_LICENSE = MIT
@@ -13,31 +13,37 @@ WESTON_CPE_ID_VENDOR = wayland
 WESTON_INSTALL_STAGING = YES
 
 WESTON_DEPENDENCIES = host-pkgconf wayland wayland-protocols \
-	libxkbcommon pixman libpng udev cairo libinput libdisplay-info libdrm \
-	seatd
+	libxkbcommon pixman libpng udev cairo libinput libdrm
 
 WESTON_CONF_OPTS = \
+	-Dbackend-headless=false \
+	-Dcolor-management-colord=false \
 	-Ddoc=false \
 	-Dremoting=false \
-	-Dbackend-vnc=false \
 	-Dtools=calibrator,debug,info,terminal,touch-calibrator
 
-ifeq ($(BR2_PACKAGE_WESTON_SIMPLE_CLIENTS),y)
-# Note: some clients are conditional, see further for the others.
-WESTON_SIMPLE_CLIENTS = \
-	damage \
-	im \
-	shm \
-	touch
-
+# Uses VIDIOC_EXPBUF, only available from 3.8+
 ifeq ($(BR2_TOOLCHAIN_HEADERS_AT_LEAST_3_8),y)
-# dmabuf-v4l uses VIDIOC_EXPBUF, only available from 3.8+
-WESTON_SIMPLE_CLIENTS += dmabuf-v4l
+WESTON_CONF_OPTS += -Dsimple-clients=dmabuf-v4l
+else
+WESTON_CONF_OPTS += -Dsimple-clients=
 endif
-endif # BR2_PACKAGE_WESTON_SIMPLE_CLIENTS
 
-# weston uses jpeg_read_icc_profile(), only provided by jpeg-turbo
-ifeq ($(BR2_PACKAGE_JPEG_TURBO),y)
+ifeq ($(BR2_PACKAGE_DBUS)$(BR2_PACKAGE_SYSTEMD),yy)
+WESTON_CONF_OPTS += -Dlauncher-logind=true
+WESTON_DEPENDENCIES += dbus systemd
+else
+WESTON_CONF_OPTS += -Dlauncher-logind=false
+endif
+
+ifeq ($(BR2_PACKAGE_SEATD),y)
+WESTON_CONF_OPTS += -Dlauncher-libseat=true
+WESTON_DEPENDENCIES += seatd
+else
+WESTON_CONF_OPTS += -Dlauncher-libseat=false
+endif
+
+ifeq ($(BR2_PACKAGE_JPEG),y)
 WESTON_CONF_OPTS += -Dimage-jpeg=true
 WESTON_DEPENDENCIES += jpeg
 else
@@ -51,33 +57,34 @@ else
 WESTON_CONF_OPTS += -Dimage-webp=false
 endif
 
-ifeq ($(BR2_PACKAGE_HAS_LIBEGL)$(BR2_PACKAGE_HAS_LIBGBM)$(BR2_PACKAGE_HAS_LIBGLES),yyy)
-WESTON_CONF_OPTS += -Drenderer-gl=true
-WESTON_DEPENDENCIES += libegl libgbm libgles
-ifeq ($(BR2_PACKAGE_WESTON_SIMPLE_CLIENTS),y)
-WESTON_SIMPLE_CLIENTS += dmabuf-egl dmabuf-feedback egl
+# weston-launch must be u+s root in order to work properly
+ifeq ($(BR2_PACKAGE_LINUX_PAM),y)
+define WESTON_PERMISSIONS
+	/usr/bin/weston-launch f 4755 0 0 - - - - -
+endef
+define WESTON_USERS
+	- - weston-launch -1 - - - - Weston launcher group
+endef
+WESTON_CONF_OPTS += -Ddeprecated-weston-launch=true
+WESTON_DEPENDENCIES += linux-pam
+else
+WESTON_CONF_OPTS += -Ddeprecated-weston-launch=false
 endif
+
+ifeq ($(BR2_PACKAGE_HAS_LIBEGL_WAYLAND)$(BR2_PACKAGE_HAS_LIBGLES),yy)
+WESTON_CONF_OPTS += -Drenderer-gl=true
+WESTON_DEPENDENCIES += libegl libgles
 ifeq ($(BR2_PACKAGE_PIPEWIRE)$(BR2_PACKAGE_WESTON_DRM),yy)
-WESTON_CONF_OPTS += -Dpipewire=true -Dbackend-pipewire=true
+WESTON_CONF_OPTS += -Dpipewire=true
 WESTON_DEPENDENCIES += pipewire
 else
-WESTON_CONF_OPTS += -Dpipewire=false -Dbackend-pipewire=false
+WESTON_CONF_OPTS += -Dpipewire=false
 endif
 else
 WESTON_CONF_OPTS += \
 	-Drenderer-gl=false \
-	-Dpipewire=false \
-	-Dbackend-pipewire=false
+	-Dpipewire=false
 endif
-
-ifeq ($(BR2_PACKAGE_WESTON_VULKAN),y)
-WESTON_CONF_OPTS += -Drenderer-vulkan=true
-WESTON_DEPENDENCIES += host-python-glslang libgbm vulkan-loader
-else
-WESTON_CONF_OPTS += -Drenderer-vulkan=false
-endif
-
-WESTON_CONF_OPTS += -Dsimple-clients=$(subst $(space),$(comma),$(strip $(WESTON_SIMPLE_CLIENTS)))
 
 ifeq ($(BR2_PACKAGE_WESTON_RDP),y)
 WESTON_DEPENDENCIES += freerdp
@@ -90,6 +97,14 @@ ifeq ($(BR2_PACKAGE_WESTON_DRM),y)
 WESTON_CONF_OPTS += -Dbackend-drm=true
 else
 WESTON_CONF_OPTS += -Dbackend-drm=false
+endif
+
+ifeq ($(BR2_PACKAGE_WESTON_FBDEV),y)
+WESTON_CONF_OPTS += -Dbackend-fbdev=true
+WESTON_CONF_OPTS += -Ddeprecated-backend-fbdev=true
+else
+WESTON_CONF_OPTS += -Dbackend-fbdev=false
+WESTON_CONF_OPTS += -Ddeprecated-backend-fbdev=false
 endif
 
 ifeq ($(BR2_PACKAGE_WESTON_HEADLESS),y)
@@ -116,16 +131,16 @@ WESTON_CONF_OPTS += -Dbackend-default=$(call qstrip,$(BR2_PACKAGE_WESTON_DEFAULT
 
 ifeq ($(BR2_PACKAGE_WESTON_XWAYLAND),y)
 WESTON_CONF_OPTS += -Dxwayland=true
-WESTON_DEPENDENCIES += cairo libepoxy libxcb xcb-util-cursor xlib_libX11 xlib_libXcursor xwayland
+WESTON_DEPENDENCIES += cairo libepoxy libxcb xlib_libX11 xlib_libXcursor xwayland
 else
 WESTON_CONF_OPTS += -Dxwayland=false
 endif
 
 ifeq ($(BR2_PACKAGE_LIBVA),y)
-WESTON_CONF_OPTS += -Ddeprecated-backend-drm-screencast-vaapi=true
+WESTON_CONF_OPTS += -Dbackend-drm-screencast-vaapi=true
 WESTON_DEPENDENCIES += libva
 else
-WESTON_CONF_OPTS += -Ddeprecated-backend-drm-screencast-vaapi=false
+WESTON_CONF_OPTS += -Dbackend-drm-screencast-vaapi=false
 endif
 
 ifeq ($(BR2_PACKAGE_LCMS2),y)
@@ -156,9 +171,9 @@ WESTON_CONF_OPTS += -Dshell-desktop=false
 endif
 
 ifeq ($(BR2_PACKAGE_WESTON_SHELL_FULLSCREEN),y)
-WESTON_CONF_OPTS += -Ddeprecated-shell-fullscreen=true
+WESTON_CONF_OPTS += -Dshell-fullscreen=true
 else
-WESTON_CONF_OPTS += -Ddeprecated-shell-fullscreen=false
+WESTON_CONF_OPTS += -Dshell-fullscreen=false
 endif
 
 ifeq ($(BR2_PACKAGE_WESTON_SHELL_IVI),y)
@@ -173,24 +188,30 @@ else
 WESTON_CONF_OPTS += -Dshell-kiosk=false
 endif
 
-ifeq ($(BR2_PACKAGE_WESTON_SHELL_LUA),y)
-WESTON_DEPENDENCIES += lua
-WESTON_CONF_OPTS += -Dshell-lua=true
-else
-WESTON_CONF_OPTS += -Dshell-lua=false
-endif
-
-ifeq ($(BR2_PACKAGE_WESTON_SCREENSHARE),y)
-WESTON_CONF_OPTS += -Ddeprecated-screenshare=true
-else
-WESTON_CONF_OPTS += -Ddeprecated-screenshare=false
-endif
-
 ifeq ($(BR2_PACKAGE_WESTON_DEMO_CLIENTS),y)
 WESTON_CONF_OPTS += -Ddemo-clients=true
 WESTON_DEPENDENCIES += pango
 else
 WESTON_CONF_OPTS += -Ddemo-clients=false
+endif
+
+define WESTON_TARGET_INSTALL_CMD
+	$(INSTALL) -m 0755 -D $(WESTON_PKGDIR)/weston.sh \
+                $(TARGET_DIR)/etc/profile.d/weston.sh
+	$(INSTALL) -m 0755 -D $(WESTON_PKGDIR)/weston.ini \
+                $(TARGET_DIR)/etc/xdg/weston/weston.ini
+endef
+
+WESTON_POST_INSTALL_TARGET_HOOKS += WESTON_TARGET_INSTALL_CMD
+
+ifeq ($(BR2_PACKAGE_WESTON_DEFAULT_RESISTIVE_TOUCHSCREEN),y)
+define WESTON_CONFIG_RESISTIVE_TOUCHSCREEN
+	$(INSTALL) -m 0755 -D $(WESTON_PKGDIR)/save-resistive-touch-calibration.sh \
+                  $(TARGET_DIR)/etc/xdg/save-resistive-touch-calibration.sh
+	$(SED) 's/^touchscreen_calibrator=.*/touchscreen_calibrator=true/g'  $(TARGET_DIR)/etc/xdg/weston/weston.ini
+	$(SED) 's/^USING_RESISTIVE_TOUCHSCREEN=.*/USING_RESISTIVE_TOUCHSCREEN=1/g' $(TARGET_DIR)/etc/profile.d/weston.sh
+endef
+WESTON_POST_INSTALL_TARGET_HOOKS += WESTON_CONFIG_RESISTIVE_TOUCHSCREEN
 endif
 
 $(eval $(meson-package))
