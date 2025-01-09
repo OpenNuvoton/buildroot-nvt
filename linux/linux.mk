@@ -370,7 +370,11 @@ LINUX_PRE_BUILD_HOOKS += LINUX_KERNEL_CUSTOM_LOGO_CONVERT
 endif
 
 ifeq ($(BR2_LINUX_KERNEL_USE_DEFCONFIG),y)
+ifeq ($(BR2_TARGET_KERNEL_DRM_MA35_VERSION),y)
+LINUX_KCONFIG_DEFCONFIG = $(call qstrip,$(BR2_LINUX_KERNEL_DEFCONFIG))_drm_defconfig
+else
 LINUX_KCONFIG_DEFCONFIG = $(call qstrip,$(BR2_LINUX_KERNEL_DEFCONFIG))_defconfig
+endif
 else ifeq ($(BR2_LINUX_KERNEL_USE_ARCH_DEFAULT_CONFIG),y)
 ifeq ($(BR2_powerpc64le),y)
 LINUX_KCONFIG_DEFCONFIG = ppc64le_defconfig
@@ -573,6 +577,7 @@ endif
 # The call to disable gcc-plugins is a stop-gap measure:
 #   https://lore.kernel.org/buildroot/20200512095550.GW12536@scaer
 define LINUX_BUILD_CMDS
+	$(if $(BR2_NUVOTON_MA35D1),$(if $(BR2_TARGET_KERNEL_DRM_MA35_VERSION),$(SED) 's/ma35d1\.dtsi/ma35d1-drm\.dtsi/' $(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME)),$(SED) 's/ma35d1-drm\.dtsi/ma35d1\.dtsi/' $(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME))))
 	$(if $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35), \
 	$(call KCONFIG_ENABLE_OPT,CONFIG_COMMON_CLK_FIXED_UNUSED), \
 	$(call KCONFIG_DISABLE_OPT,CONFIG_COMMON_CLK_FIXED_UNUSED))
