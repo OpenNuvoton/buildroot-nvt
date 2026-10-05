@@ -205,7 +205,7 @@ config BR2_PACKAGE_WESTON_DEMO_CLIENTS
 	depends on BR2_TOOLCHAIN_HAS_THREADS # pango
 	depends on BR2_USE_WCHAR # pango
 	depends on BR2_PACKAGE_HAS_LIBGLES
-	depends on BR2_PACKAGE_HAS_LIBEGL_WAYLAND
+	depends on BR2_PACKAGE_HAS_LIBEGL
 	select BR2_PACKAGE_PANGO
 	help
 	  This enables the installation of Weston's demo clients.
@@ -227,6 +227,6 @@ comment "demo clients needs an OpenGL ES provider, an OpenEGL-capable Wayland ba
 	depends on BR2_TOOLCHAIN_HAS_SYNC_4
 	depends on !BR2_INSTALL_LIBSTDCPP || !BR2_TOOLCHAIN_HAS_THREADS || \
 		!BR2_USE_WCHAR || !BR2_PACKAGE_HAS_LIBGLES || \
-		!BR2_PACKAGE_HAS_LIBEGL_WAYLAND || !BR2_TOOLCHAIN_GCC_AT_LEAST_4_9
+		!BR2_PACKAGE_HAS_LIBEGL || !BR2_TOOLCHAIN_GCC_AT_LEAST_4_9
 
 endif
