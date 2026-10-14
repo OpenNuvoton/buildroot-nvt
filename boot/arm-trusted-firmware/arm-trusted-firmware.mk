@@ -318,6 +318,27 @@ ifeq ($(BR2_TARGET_MA35H0_SECURE_BOOT),y)
 ARM_TRUSTED_FIRMWARE_MAKE_OPTS += FIP_DE_AES=1
 endif
 
+ifeq ($(BR2_ANTI_ROLLBACK_AB_BOOT),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += \
+	MA35_ANTI_ROLLBACK_AB_BOOT=1 \
+	MA35_BL2_VERSION=$(BR2_TARGET_MA35_ARB_BL2_VER) \
+	MA35_BL31_VERSION=$(BR2_TARGET_MA35_ARB_BL31_VER)
+
+# Cached master tarballs may predate the platform A/B implementation.
+define ARM_TRUSTED_FIRMWARE_CHECK_MA35_AB
+	grep -q 'MA35_ANTI_ROLLBACK_AB_BOOT' $(@D)/plat/nuvoton/ma35d1/platform.mk || \
+		{ echo "MA35 A/B boot requires updated TF-A sources; refresh the cached source archive." >&2; exit 1; }
+endef
+ARM_TRUSTED_FIRMWARE_PRE_BUILD_HOOKS += ARM_TRUSTED_FIRMWARE_CHECK_MA35_AB
+
+# post-image must refresh BL33 after embedding the FIT verification key.
+define ARM_TRUSTED_FIRMWARE_INSTALL_MA35_FIPTOOL
+	$(INSTALL) -D -m 0755 $(@D)/tools/fiptool/fiptool \
+		$(HOST_DIR)/bin/ma35-fiptool
+endef
+ARM_TRUSTED_FIRMWARE_POST_INSTALL_IMAGES_HOOKS += ARM_TRUSTED_FIRMWARE_INSTALL_MA35_FIPTOOL
+endif
+
 ARM_TRUSTED_FIRMWARE_MAKE_TARGETS += \
 	$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_ADDITIONAL_TARGETS))
 

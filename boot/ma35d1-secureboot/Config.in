@@ -1,9 +1,77 @@
+config BR2_ANTI_ROLLBACK_AB_BOOT
+	bool "Enable A/B boot and Anti-Rollback"
+	depends on BR2_NUVOTON_MA35D1
+	depends on BR2_LINUX_KERNEL
+	depends on BR2_TARGET_UBOOT_BUILD_SYSTEM_KCONFIG
+	depends on BR2_TARGET_ARM_TRUSTED_FIRMWARE_FIP
+	depends on BR2_TARGET_ARM_TRUSTED_FIRMWARE_UBOOT_AS_BL33
+	depends on BR2_TARGET_ARM_TRUSTED_FIRMWARE_UBOOT_BL33_IMAGE = "u-boot.bin"
+	select BR2_TARGET_UBOOT_NEEDS_OPENSSL
+	select BR2_PACKAGE_HOST_UBOOT_TOOLS
+	select BR2_PACKAGE_HOST_UBOOT_TOOLS_FIT_SUPPORT
+	select BR2_PACKAGE_HOST_UBOOT_TOOLS_FIT_SIGNATURE_SUPPORT
+	select BR2_TARGET_MA35D1_SECURE_BOOT
+	select BR2_TARGET_OTP_ANTI_ROLLBACK
+	help
+	  Enable dual-slot A/B boot and rollback support for MA35D1
+	  SD/eMMC, NAND and SPI-NAND images. SPI-NOR is not supported.
+	  Requires MA35 TF-A and U-Boot sources with A/B support.
+
+	  The system keeps two bootable slots, A and B.
+	  Normally the active slot is booted first.
+	  If booting or validation of the active slot fails,
+	  the boot flow can fall back to the other slot.
+
+	  This is typically used for safe firmware update and recovery.
+
+if BR2_ANTI_ROLLBACK_AB_BOOT
+
+menu "A/B Boot & Anti-Rollback Settings"
+
+config BR2_TARGET_MA35_UBOOT_MTDPARTS_AB
+	string "A/B mtdparts"
+	default "3m(uboot),768k(uboot-env),256k(device-tree),24m(kernel),3m(uboot_b),768k(uboot-env_b),256k(device-tree_b),24m(kernel_b),100m(rootfs)"
+	help
+	  U-Boot A/B mtdparts layout.
+
+config BR2_TARGET_OTP_ANTI_ROLLBACK
+	bool "MA35 OTP Anti-Rollback Protection"
+	default y
+	help
+	  Enable BL2 firmware anti-rollback protection using the MA35
+	  OTP secure-region fuse counter. At boot, BL2 rejects older
+	  versions and blows additional OTP fuses to record newer ones.
+
+	  OTP fuses cannot be reset. Each firmware version bump consumes
+	  part of the limited 704-bit lifetime budget.
+
+	  Supported: MA35D1 and MA35D05K. This is enabled together with
+	  A/B boot and anti-rollback support.
+
+config BR2_MA35_ARB_LINUX_VER
+	int "Linux Anti-Rollback Version"
+	default 0
+
+config BR2_TARGET_MA35_ARB_BL2_VER
+	int "BL2 Anti-Rollback Version"
+	default 0
+
+config BR2_TARGET_MA35_ARB_BL31_VER
+	int "BL31 Anti-Rollback Version"
+	default 0
+
+endmenu
+endif
+
 if	BR2_NUVOTON_MA35D1
+
 config BR2_TARGET_MA35D1_BOOT_SPACE
-        int "MA35 Boot Space(KiB)"
-	default "32768"
-        help
-          Reserved space form MMC/SD 
+	int "MA35 Boot Space(KiB)"
+	default 65536 if BR2_ANTI_ROLLBACK_AB_BOOT
+	default 32768
+	range 65536 2147483647 if BR2_ANTI_ROLLBACK_AB_BOOT
+	help
+	  Reserved space form MMC/SD
 
 config BR2_TARGET_MA35D1_SECURE_BOOT
 	bool "MA35 Secure Boot"
