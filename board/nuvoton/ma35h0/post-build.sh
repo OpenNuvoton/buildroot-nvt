@@ -23,8 +23,9 @@ if grep -Eq "^BR2_MA35H0_RESIZE_SD_MAX=y$" ${BR2_CONFIG}; then
 fi
 
 if grep -Eq "^BR2_PACKAGE_BUSYBOX=y$" ${BR2_CONFIG}; then
-	if grep -Eq "^BR2_LINUX_KERNEL_MA35_6_12_VERSION=y$" ${BR2_CONFIG}; then
-		: # VC8000/DC/GPU drivers are built into the 6.12 kernel.
+	if grep -Eq "^BR2_LINUX_KERNEL_MA35_6_12_VERSION=y$|^BR2_LINUX_KERNEL_MA35_6_18_VERSION=y$" ${BR2_CONFIG}; then
+		: # VC8000/DC/GPU drivers are fully built into the 6.12/6.18 kernel;
+		  # no legacy .ko modules or insmod scripts are needed.
 	else
 		install -d -m 755 ${MODULES_TDIR}
 		for module in ${MODULES_DIR}/*.ko; do
