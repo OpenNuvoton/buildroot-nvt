@@ -19,26 +19,10 @@ ifeq ($(BR2_TARGET_OPTEE_OS_CUSTOM_TARBALL),y)
 OPTEE_OS_TARBALL = $(call qstrip,$(BR2_TARGET_OPTEE_OS_CUSTOM_TARBALL_LOCATION))
 OPTEE_OS_SITE = $(patsubst %/,%,$(dir $(OPTEE_OS_TARBALL)))
 OPTEE_OS_SOURCE = $(notdir $(OPTEE_OS_TARBALL))
-else ifeq ($(BR2_TARGET_OPTEE_OS_MA35D1_TARBALL),y)
-OPTEE_OS_TARBALL = $(call github,OpenNuvoton,optee_os_ma35,$(OPTEE_OS_VERSION))/optee_os_ma35-$(OPTEE_OS_VERSION).tar.gz
+else ifeq ($(BR2_TARGET_OPTEE_OS_MA35_TARBALL),y)
+OPTEE_OS_TARBALL = $(call github,OpenNuvoton,MA35D1_optee_os,$(OPTEE_OS_VERSION))/MA35D1_optee_os-$(OPTEE_OS_VERSION).tar.gz
 OPTEE_OS_SITE = $(patsubst %/,%,$(dir $(OPTEE_OS_TARBALL)))
 OPTEE_OS_SOURCE = $(notdir $(OPTEE_OS_TARBALL))
-BR_NO_CHECK_HASH_FOR += $(OPTEE_OS_SOURCE)
-else ifeq ($(BR2_TARGET_OPTEE_OS_MA35D1D0_TARBALL),y)
-OPTEE_OS_TARBALL = $(call github,OpenNuvoton,optee_os_ma35,$(OPTEE_OS_VERSION))/optee_os_ma35-$(OPTEE_OS_VERSION).tar.gz
-OPTEE_OS_SITE = $(patsubst %/,%,$(dir $(OPTEE_OS_TARBALL)))
-OPTEE_OS_SOURCE = $(notdir $(OPTEE_OS_TARBALL))
-BR_NO_CHECK_HASH_FOR += $(OPTEE_OS_SOURCE)
-else ifeq ($(BR2_TARGET_OPTEE_OS_MA35D0_TARBALL),y)
-OPTEE_OS_TARBALL = $(call github,OpenNuvoton,optee_os_ma35,$(OPTEE_OS_VERSION))/optee_os_ma35-$(OPTEE_OS_VERSION).tar.gz
-OPTEE_OS_SITE = $(patsubst %/,%,$(dir $(OPTEE_OS_TARBALL)))
-OPTEE_OS_SOURCE = $(notdir $(OPTEE_OS_TARBALL))
-BR_NO_CHECK_HASH_FOR += $(OPTEE_OS_SOURCE)
-else ifeq ($(BR2_TARGET_OPTEE_OS_MA35H0_TARBALL),y)
-OPTEE_OS_TARBALL = $(call github,OpenNuvoton,optee_os_ma35,$(OPTEE_OS_VERSION))/optee_os_ma35-$(OPTEE_OS_VERSION).tar.gz
-OPTEE_OS_SITE = $(patsubst %/,%,$(dir $(OPTEE_OS_TARBALL)))
-OPTEE_OS_SOURCE = $(notdir $(OPTEE_OS_TARBALL))
-BR_NO_CHECK_HASH_FOR += $(OPTEE_OS_SOURCE)
 else ifeq ($(BR2_TARGET_OPTEE_OS_CUSTOM_GIT),y)
 OPTEE_OS_SITE = $(call qstrip,$(BR2_TARGET_OPTEE_OS_CUSTOM_REPO_URL))
 OPTEE_OS_SITE_METHOD = git

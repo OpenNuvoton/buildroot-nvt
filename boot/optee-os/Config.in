@@ -13,37 +13,20 @@ if BR2_TARGET_OPTEE_OS
 
 choice
 	prompt "OP-TEE OS version"
-	default BR2_TARGET_OPTEE_OS_MA35D1D0_TARBALL if BR2_NUVOTON_MA35D1_D0
-	default BR2_TARGET_OPTEE_OS_MA35D1_TARBALL if BR2_NUVOTON_MA35D1
-	default BR2_TARGET_OPTEE_OS_MA35D0_TARBALL if BR2_NUVOTON_MA35D0
-	default BR2_TARGET_OPTEE_OS_MA35H0_TARBALL if BR2_NUVOTON_MA35H0
+	default BR2_TARGET_OPTEE_OS_MA35_TARBALL \
+		if BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0
 	default BR2_TARGET_OPTEE_OS_LATEST if BR2_PACKAGE_HOST_RUSTC_ARCH_SUPPORTS
 	help
 	  Select the version of OP-TEE OS you want to use
 
-config BR2_TARGET_OPTEE_OS_MA35D1_TARBALL
-        bool "MA35D1 tarball"
-        depends on BR2_NUVOTON_MA35D1
-        help
-          Use a custom version fetched from a tarball.
-
-config BR2_TARGET_OPTEE_OS_MA35D0_TARBALL
-        bool "MA35D0 tarball"
-        depends on BR2_NUVOTON_MA35D0
-        help
-          Use a custom version fetched from a tarball.
-
-config BR2_TARGET_OPTEE_OS_MA35H0_TARBALL
-        bool "MA35H0 tarball"
-        depends on BR2_NUVOTON_MA35H0
-        help
-          Use a custom version fetched from a tarball.
-
-config BR2_TARGET_OPTEE_OS_MA35D1D0_TARBALL
-	bool "MA35D05K tarball"
-	depends on BR2_NUVOTON_MA35D1_D0
+config BR2_TARGET_OPTEE_OS_MA35_TARBALL
+	bool "MA35 BSP tarball"
+	depends on BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0
 	help
-	  Use a custom version fetched from a tarball.
+	  Use the Nuvoton MA35 OP-TEE OS source for MA35D1, MA35D05K,
+	  MA35D0 and MA35H0.
+
+	  https://github.com/OpenNuvoton/MA35D1_optee_os
 
 config BR2_TARGET_OPTEE_OS_LATEST
 	bool "4.9.0"
@@ -87,14 +70,13 @@ config BR2_TARGET_OPTEE_OS_CUSTOM_TARBALL_LOCATION
 
 endif
 
-if BR2_TARGET_OPTEE_OS_MA35D1_TARBALL || BR2_TARGET_OPTEE_OS_MA35D0_TARBALL || BR2_TARGET_OPTEE_OS_MA35H0_TARBALL || BR2_TARGET_OPTEE_OS_MA35D1D0_TARBALL
+if BR2_TARGET_OPTEE_OS_MA35_TARBALL
 
 config BR2_TARGET_OPTEE_OS_VERSION
-        string "MA35 custom repository version"
-        default "master"
-        help
-          Revision to use in the typical format used by Git, i.e a
-          SHA1 or a tag.
+	string "MA35 repository version"
+	default "master"
+	help
+	  Branch, tag or commit to download from MA35D1_optee_os.
 
 endif
 
@@ -103,7 +85,7 @@ if BR2_TARGET_OPTEE_OS_CUSTOM_GIT
 config BR2_TARGET_OPTEE_OS_CUSTOM_REPO_URL
 	string "URL of custom repository"
 	depends on BR2_TARGET_OPTEE_OS_CUSTOM_GIT
-	default "https://github.com/OpenNuvoton/MA35D1_optee_os-v3.9.0.git" if BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0 
+	default "https://github.com/OpenNuvoton/MA35D1_optee_os.git" if BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0
 	help
 	  Specific location of the reference source tree Git
 	  repository.
@@ -111,7 +93,7 @@ config BR2_TARGET_OPTEE_OS_CUSTOM_REPO_URL
 config BR2_TARGET_OPTEE_OS_CUSTOM_REPO_VERSION
 	string "Custom repository version"
 	depends on BR2_TARGET_OPTEE_OS_CUSTOM_GIT
-	default "0e0253588276e9604bd27ea6bd4fcce96837f60b" if BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0
+	default "master" if BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0
 	help
 	  Revision to use in the typical format used by Git, i.e a
 	  SHA1 or a tag.
@@ -126,7 +108,6 @@ config BR2_TARGET_OPTEE_OS_VERSION
 	default "custom"	if BR2_TARGET_OPTEE_OS_CUSTOM_TARBALL
 	default BR2_TARGET_OPTEE_OS_CUSTOM_REPO_VERSION \
 				if BR2_TARGET_OPTEE_OS_CUSTOM_GIT
-	default "075741c5970bdb2b8e7791efa8f85545b96b4cd8" if BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0
 
 config BR2_TARGET_OPTEE_OS_LICENSE_FILES
 	string "OP-TEE OS license files" if BR2_TARGET_OPTEE_OS_CUSTOM_GIT || \
